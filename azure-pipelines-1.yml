@@ -4,28 +4,21 @@ trigger:
 pool:
   name: 'Default'  # Asegúrese de que este sea el nombre correcto de su pool de agentes auto-hosteados
 
-variables:
-  pythonVersion: '3.9.2'
-
 steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(pythonVersion)'
-    addToPath: true
-
 - script: |
-    python --version
-    pip --version
+    python3 --version
+    pip3 --version
   displayName: 'Verificar versiones de Python y pip'
 
 - script: |
-    pip install -r requirements.txt
-  displayName: 'Instalar dependencias'
+    python3 -m pip install --upgrade pip
+    python3 -m pip install -r requirements.txt
+  displayName: 'Actualizar pip e instalar dependencias'
 
 - script: |
-    python -m pytest tests/
+    python3 -m pytest tests/
   displayName: 'Ejecutar pruebas'
 
 - script: |
-    python app.py
+    python3 app.py
   displayName: 'Ejecutar aplicación'
