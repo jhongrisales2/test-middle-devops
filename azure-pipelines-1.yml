@@ -7,7 +7,7 @@ pool:
 steps:
 - script: |
     python3 --version
-    pip3 --version
+    pip --version
   displayName: 'Verificar versiones de Python y pip'
 
 - script: |
