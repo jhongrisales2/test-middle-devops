@@ -1,0 +1,31 @@
+trigger:
+- main
+
+pool:
+  name: 'Default'  # Asegúrese de que este sea el nombre correcto de su pool de agentes auto-hosteados
+
+variables:
+  pythonVersion: '3.9.2'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(pythonVersion)'
+    addToPath: true
+
+- script: |
+    python --version
+    pip --version
+  displayName: 'Verificar versiones de Python y pip'
+
+- script: |
+    pip install -r requirements.txt
+  displayName: 'Instalar dependencias'
+
+- script: |
+    python -m pytest tests/
+  displayName: 'Ejecutar pruebas'
+
+- script: |
+    python app.py
+  displayName: 'Ejecutar aplicación'
