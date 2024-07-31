@@ -1,19 +1,63 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
-- main
+- develop
 
-pool:
-  vmImage: ubuntu-latest
+stages:
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+# Stage 1 - BUILD
+- stage: Build
+  jobs:
+  - job: Build
+    pool: Default
+    continueOnError: true
+    steps:
+    - script: echo "hello to my first Build"
+      displayName: 'Msg First Build'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+# Stage 2 - DEV deploy
+- stage: dev_deploy
+  jobs:
+  - deployment: dev_deploy
+    pool: Default
+    environment: 'dev-hello'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: echo "hello MS Ignite, dev world, value is $(boolCondition)!!!"
+            displayName: 'Msg Deploy Dev'
+
+# Stage 3 - QA Deploy
+- stage: qa_deploy
+  jobs:
+  - deployment: qa_deploy  #not a job... a deployment!
+    condition: eq(variables.boolCondition, true)
+    pool: Default
+    environment: 'qa-hello'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: echo "hello, qa world !!!"
+            displayName: 'Msg Deploy QA'
+
+# Stage 4 - Build
+- stage: run_system_quality_tests
+  displayName: 'Run the system quality tests'
+  dependsOn: qa_deploy
+  jobs:
+  - job: run_non_functional_tests
+    pool: Default
+    steps:
+    - script: echo Run system quality tests
+      displayName: 'Running the system quality tests'        
+
+# Stage 1 - Build
+- stage: run_performance_tests
+  displayName: 'Run the performance tests'
+  dependsOn: qa_deploy
+  jobs:
+  - job: run_stress_tests
+    pool: Default
+    steps:
+    - script: echo Run performance tests
+      displayName: 'Running the performance tests'  
