@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Amita&family=Dancing+Script&display=swap" rel="stylesheet">
+        
+        <!-- Estilos CSS -->
+        <style>
+            body {
+                background-color: lightcyan;
+            }
+            h1 {
+                background-color: ##DAF7A6;
+                text-align: center;
+                padding-top: 0%;
+                padding-bottom: 0%;
+                border: none;
+                font-family: 'Bangers', cursive;
+            }
+
+            h3 {
+                background-color: #3fba9c;
+                text-align: center;
+
+            }
+
+            p {
+                text-align: justify;
+
+            }
+            h4 , h2 {
+                text-align: center;
+            }
+            img {
+                width: 100%;
+            }
+        </style>
+
+        <title>Mi Primer APP con FLASK</title>
+    </head>
+    <body>
+        <h1>Trayendo el DateTime desde FLASK<br>
+            {{ DATE_FLASK_VAR }}</h1>
+        <div class="row">
+                <div class ="col-4">
+                    <img src="{{url_for('static', filename='imgs/wallpaper-az.png')}}">
+                </div>
+                <div class ="col-4">
+                    <h3>LOS RESULTLADOS MOSTRADOS</h3>
+                    <p>Creación de cantidad aleatoria de nombres a través de Flask como intermediario del backend. 
+                        La cantidad de nombres a generar es:</p>
+                    <h2>{{AMOUNT_NAMES_VAR}}</h2>
+                </div>  
+                <div class ="col-4">
+                    <h3>NOMBRES GENERADOS</h3>
+                        <ol>
+                            {% for nombre in VEC_NAMES_VAR %}
+                                <li>{{nombre}}</li>
+                            {% endfor %}
+                        </ol>
+                </div>  
+        </div>
+        <br>
+        <div class="container col-12">
+            <div class="alert alert-secondary" role="alert">
+                <h4>Usando Python para crear aplicaciones WEB</h4>
+            </div>
+        </div>
+    </body>
+</html>
