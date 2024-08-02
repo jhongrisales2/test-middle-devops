@@ -116,3 +116,16 @@ stages:
         fi
       displayName: 'Print Coverage Summary'
       condition: succeededOrFailed()
+
+# Stage 6 - STATIC CODE ANALYSIS
+- stage: StaticCodeAnalysis
+  condition: true
+  jobs:
+  - job: StaticCodeAnalysisJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        python3 -m pip install flake8
+        flake8 .
+      displayName: 'Run lint test'
