@@ -4,7 +4,7 @@ stages:
 
 # Stage 1 - BUILD
 - stage: Build
-  condition: true
+  condition: false
   jobs:
   - job: BuildJob
     pool:
@@ -129,3 +129,14 @@ stages:
         python3 -m pip install flake8
         flake8 .
       displayName: 'Run lint test'
+    - script: |
+        python3 -m pytest --junitxml=./test-results.xml
+      displayName: 'Run PyTest Tester'
+    
+    # PUBLISH - Lint Test
+    - task: PublishTestResults@2
+      displayName: 'Publish PyTest results'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: '**/test-*.xml'
+        testRunTitle: 'Publish test results for Python $(pythonVersion)'
