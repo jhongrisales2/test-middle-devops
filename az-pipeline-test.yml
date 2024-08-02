@@ -62,6 +62,11 @@ stages:
         pwd
         ls -R
       displayName: 'Check working directory'
+    # EXECUTE - LINT TEST
+    - script: |
+        python3 -m pip install flake8
+        flake8 .
+      displayName: 'Run lint test'
     # INSTALL - Pytest and Coverage to Test
     - script: |
         pip install pytest pytest-azurepipelines pytest-cov
@@ -87,6 +92,7 @@ stages:
     - task: PublishTestResults@2
       condition: succeededOrFailed()
       inputs:
+        failTaskOnFailedTests: true
         testResultsFormat: 'JUnit'
         testResultsFiles: '**/test-results.xml'
         searchFolder: '$(System.DefaultWorkingDirectory)'
@@ -116,27 +122,3 @@ stages:
         fi
       displayName: 'Print Coverage Summary'
       condition: succeededOrFailed()
-
-# Stage 6 - STATIC CODE ANALYSIS
-- stage: StaticCodeAnalysis
-  condition: true
-  jobs:
-  - job: StaticCodeAnalysisJob
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-    - script: |
-        python3 -m pip install flake8
-        flake8 .
-      displayName: 'Run lint test'
-    - script: |
-        python3 -m pytest --junitxml=./test-results.xml
-      displayName: 'Run PyTest Tester'
-    
-    # PUBLISH - Lint Test
-    - task: PublishTestResults@2
-      displayName: 'Publish PyTest results'
-      condition: succeededOrFailed()
-      inputs:
-        testResultsFiles: '**/test-*.xml'
-        testRunTitle: 'Publish test results for Python $(pythonVersion)'
