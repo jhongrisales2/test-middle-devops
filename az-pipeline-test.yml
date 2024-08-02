@@ -66,5 +66,5 @@ stages:
     - script: |
         pip install pytest pytest-azurepipelines pytest-cov
         pip list
-        python3 -m pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml -v test-app/test-main.py
+        python3 -m pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml -v test-app/test_main.py
       displayName: 'Unit Test with pytest'
