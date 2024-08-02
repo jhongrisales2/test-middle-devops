@@ -26,12 +26,9 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    - task: PythonScript@0
-      inputs:
-        scriptSource: 'inline'
-        script: |
-          python3 -m ensurepip --upgrade
-          python3 -m pip install --upgrade pip
+    - script: |
+        python3 -m ensurepip --upgrade
+        python3 -m pip install --upgrade pip
       displayName: 'Installation of the tools'
 
 # Stage 3 - UNIT TEST
