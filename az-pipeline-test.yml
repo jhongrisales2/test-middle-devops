@@ -1,14 +1,16 @@
 trigger:
-- main
+- develop
 
-pool:
-  vmImage: ubuntu-latest
+stages:
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+# Stage 1 - BUILD
+- stage: Build
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    continueOnError: true
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
