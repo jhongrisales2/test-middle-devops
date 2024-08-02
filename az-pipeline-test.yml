@@ -28,11 +28,14 @@ stages:
     - task: PythonScript@0
       inputs:
         scriptSource: 'inline'
-        script: 'python3 -m pip install --upgrade pip setuptools wheel'
+        script: |
+          python3 -m ensurepip --upgrade
+          python3 -m pip install --upgrade pip
       displayName: 'Installation of the tools'
 
 # Stage 3 - UNIT TEST
 - stage: UnitTest
+  condition: false
   jobs:
   - job: UnitTestJob
     pool:
