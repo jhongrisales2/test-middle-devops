@@ -87,11 +87,12 @@ stages:
 - stage: PublishTestResults
   condition: true
   jobs:
-  - job: CheckInstallToolsJob
+  - job: PublishAllTest
     pool:
       vmImage: 'ubuntu-latest'
     steps:
 
+    # PUBLISH - Unit Test Results
     - task: PublishTestResults@2
       condition: succeededOrFailed()
       inputs:
@@ -101,7 +102,8 @@ stages:
         searchFolder: '$(System.DefaultWorkingDirectory)'
         testRunTitle: 'Publish test results for Python $(pythonVersion)'
       displayName: 'Publish Unit Test Results'
-
+    
+    # PUBLISH - Code Coverage Results
     - task: PublishCodeCoverageResults@2
       condition: succeededOrFailed()
       inputs:
@@ -124,4 +126,12 @@ stages:
           echo "El archivo coverage.xml no se encontró"
         fi
       displayName: 'Print Coverage Summary'
+      condition: succeededOrFailed()
+
+    # PUBLISH - Flake8 results
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'flake8_report.txt'
+        artifactName: 'code_quality_reports'
+      displayName: 'Publish Flake8 results'
       condition: succeededOrFailed()
