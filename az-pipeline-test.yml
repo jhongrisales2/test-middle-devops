@@ -4,7 +4,7 @@ stages:
 
 # Stage 1 - BUILD
 - stage: Build
-  condition: false
+  condition: true
   jobs:
   - job: BuildJob
     pool:
@@ -28,12 +28,12 @@ stages:
     steps:
     - script: |
         python3 -m ensurepip --upgrade
-        python3 -m pip install --upgrade pip
+        python3 -m pip install --upgrade pip setuptools wheel
       displayName: 'Installation of the tools'
 
 # Stage 3 - UNIT TEST
 - stage: UnitTest
-  condition: false
+  condition: true
   jobs:
   - job: UnitTestJob
     pool:
