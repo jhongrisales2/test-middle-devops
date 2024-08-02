@@ -20,6 +20,7 @@ stages:
 
 # Stage 2 - INSTALL TOOLS
 - stage: InstallTools
+  condition: true
   jobs:
   - job: InstallToolsJob
     pool:
