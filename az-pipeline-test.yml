@@ -31,7 +31,20 @@ stages:
         python3 -m pip install --upgrade pip setuptools wheel
       displayName: 'Installation of the tools'
 
-# Stage 3 - UNIT TEST
+# Stage 3 - CHECK INSTALL TOOLS AND VERSIONS
+- stage: CheckInstallTools
+  condition: true
+  jobs:
+  - job: CheckInstallToolsJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        python3 --version
+        pip --version
+      displayName: 'Check Python and pip versions'
+
+# Stage 4 - UNIT TEST
 - stage: UnitTest
   condition: true
   jobs:
@@ -39,8 +52,19 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+    # CHECK - Pyton and pip versions
     - script: |
-        pip install pytest pytest-azurepipelines
-        pip install pytest-cov
-        pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml
-    displayName: 'Unit Test with pytest'
+        python3 --version
+        pip --version
+      displayName: 'Check Python and pip versions'
+    # CHECK - Working directory
+    - script: |
+        pwd
+        ls -R
+      displayName: 'Check working directory'
+    # INSTALL - Pytest and Coverage to Test
+    - script: |
+        pip install pytest pytest-azurepipelines pytest-cov
+        pip list
+        python3 -m pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml -v test-app/test-main.py
+      displayName: 'Unit Test with pytest'
