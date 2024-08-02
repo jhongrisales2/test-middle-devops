@@ -9,7 +9,6 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     continueOnError: true
-
     steps:
     - task: UsePythonVersion@0
       inputs:
@@ -18,13 +17,25 @@ stages:
     - script: python3 base-app/helloworld.py
     displayName: 'Run Hello World '
 
-# Stage 2 - UNIT TEST
+# Stage 2 - INSTALL TOOLS
+- stage: InstallTools
+  jobs:
+  - job: InstallToolsJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: PythonScript@0
+      inputs:
+        scriptSource: 'inline'
+        script: 'python -m pip install --upgrade pip setuptools wheel'
+      displayName: 'Installation of the tools'
+
+# Stage 3 - UNIT TEST
 - stage: UnitTest
   jobs:
   - job: UnitTestJob
     pool:
       vmImage: 'ubuntu-latest'
-
     steps:
     - task: PythonScript@0
       inputs:
