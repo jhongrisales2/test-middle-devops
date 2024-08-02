@@ -16,7 +16,7 @@ stages:
         versionSpec: '$(pythonVersion)'
       displayName: 'Use Python $(pythonVersion)'
     - script: python3 base-app/helloworld.py
-    displayName: 'Run Hello World '
+    displayName: 'Run Hello World'
 
 # Stage 2 - INSTALL TOOLS
 - stage: InstallTools
@@ -39,11 +39,8 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    - task: PythonScript@0
-      inputs:
-        scriptSource: 'inline'
-        script: |
-          pip install pytest pytest-azurepipelines
-          pip install pytest-cov
-          pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml
-      displayName: 'Unit Test with pytest'
+    - script: |
+        pip install pytest pytest-azurepipelines
+        pip install pytest-cov
+        pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml
+    displayName: 'Unit Test with pytest'
