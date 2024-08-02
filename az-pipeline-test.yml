@@ -74,7 +74,7 @@ stages:
     - script: |
         pip install pytest pytest-azurepipelines pytest-cov
         pip list
-        python3 -m pytest --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=xml -v test-app/test_main.py
+        python3 -m pytest --doctest-modules --junitxml=junit/test_results.xml --cov=. --cov-report=xml -v test-app/test_main.py
         echo "Contenido del directorio actual:"
         ls -R
         echo "Contenido de la carpeta junit (si existe):"
@@ -98,7 +98,7 @@ stages:
       inputs:
         #failTaskOnFailedTests: true
         testResultsFormat: 'JUnit'
-        testResultsFiles: '**/test-results.xml'
+        testResultsFiles: './junit/test_results.xml'
         searchFolder: '$(System.DefaultWorkingDirectory)'
         testRunTitle: 'Publish test results for Python $(pythonVersion)'
       displayName: 'Publish Unit Test Results'
@@ -107,7 +107,7 @@ stages:
     - task: PublishCodeCoverageResults@2
       condition: succeededOrFailed()
       inputs:
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+        summaryFileLocation: 'coverage.xml'
         failIfCoverageEmpty: false
       displayName: 'Publish Code Coverage Results'
     
