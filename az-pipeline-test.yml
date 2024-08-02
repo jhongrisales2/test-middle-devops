@@ -4,6 +4,7 @@ stages:
 
 # Stage 1 - BUILD
 - stage: Build
+  condition: false
   jobs:
   - job: BuildJob
     pool:
@@ -27,7 +28,7 @@ stages:
     - task: PythonScript@0
       inputs:
         scriptSource: 'inline'
-        script: 'python -m pip install --upgrade pip setuptools wheel'
+        script: 'python3 -m pip install --upgrade pip setuptools wheel'
       displayName: 'Installation of the tools'
 
 # Stage 3 - UNIT TEST
