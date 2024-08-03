@@ -113,21 +113,21 @@ stages:
       displayName: 'Publish Code Coverage Results'
     - script: |
         python3 -c "
-        import xml.etree.ElementTree as ET
-        import os
-        coverage_file = '$(System.DefaultWorkingDirectory)/coverage.xml'
-        if os.path.exists(coverage_file):
-            tree = ET.parse(coverage_file)
-            root = tree.getroot()
-            total = root.find('.//coverage')
-            if total is not None and 'line-rate' in total.attrib:
-                print(f'Cobertura total: {float(total.attrib['line-rate']) * 100:.2f}%')
-                for class_elem in root.findall('.//class'):
-                    print(f'Archivo: {class_elem.attrib['filename']}, Cobertura: {float(class_elem.attrib['line-rate']) * 100:.2f}%')
-            else:
-                print('No se pudo encontrar la información de cobertura en el archivo XML')
-        else:
-            print(f'El archivo {coverage_file} no se encontró')
-                "
+          import xml.etree.ElementTree as ET
+          import os
+          coverage_file = '$(System.DefaultWorkingDirectory)/coverage.xml'
+          if os.path.exists(coverage_file):
+              tree = ET.parse(coverage_file)
+              root = tree.getroot()
+              total = root.find('.//coverage')
+              if total is not None and 'line-rate' in total.attrib:
+                  print(f\"Cobertura total: {float(total.attrib['line-rate']) * 100:.2f}%\")
+                  for class_elem in root.findall('.//class'):
+                      print(f\"Archivo: {class_elem.attrib['filename']}, Cobertura: {float(class_elem.attrib['line-rate']) * 100:.2f}%\")
+              else:
+                  print('No se pudo encontrar la información de cobertura en el archivo XML')
+          else:
+              print(f'El archivo {coverage_file} no se encontró')
+          "
       displayName: 'Print Coverage Summary'
       condition: succeededOrFailed()
