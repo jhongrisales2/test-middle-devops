@@ -44,24 +44,14 @@ stages:
         pip --version
       displayName: 'Check Python and pip versions'
 
-# Stage 4 - UNIT TEST
-- stage: UnitTest
+# Stage 4 - EXECUTE & PUBLISH LINT TEST
+- stage: StaticCodeAnalysis
   condition: true
   jobs:
-  - job: UnitTestJob
+  - job: StaticCodeAnalysisJob
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    # CHECK - Pyton and pip versions
-    - script: |
-        python3 --version
-        pip --version
-      displayName: 'Check Python and pip versions'
-    # CHECK - Working directory
-    - script: |
-        pwd
-        ls -R
-      displayName: 'Check working directory'
     # EXECUTE - LINT TEST
     - script: |
         python3 -m pip install flake8
@@ -70,28 +60,40 @@ stages:
         cat flake8_report.txt
       displayName: 'Run lint test'
       continueOnError: true
-    # INSTALL - Pytest and Coverage to Test
+    # CHECK - Working directory
     - script: |
-        pip install pytest pytest-azurepipelines pytest-cov
-        pip list
-        python3 -m pytest --doctest-modules --junitxml=junit/test_results.xml --cov=. --cov-report=xml -v test-app/test_main.py
-        echo "Contenido del directorio actual:"
+        pwd
         ls -R
-        echo "Contenido de la carpeta junit (si existe):"
-        ls -R junit || echo "La carpeta junit no existe"
-        echo "Buscando archivos XML de resultados:"
-        find . -name "*.xml"
-      displayName: 'Unit Test with pytest and debug output'
+      displayName: 'Check working directory Lint Test'
+    # PUBLISH - Flake8 results
+    - task: PublishBuildArtifacts@1
+      condition: succeededOrFailed()
+      inputs:
+        pathToPublish: 'flake8_report.txt'
+        artifactName: 'code_quality_reports'
+      displayName: 'Publish Flake8 results'
 
-# Stage 5 - PUBLISH TEST RESULTS
-- stage: PublishTestResults
+# Stage 5 - EXECUTE & PUBLISH UNIT TEST
+- stage: UnitTest
   condition: true
   jobs:
-  - job: PublishAllTest
+  - job: UnitTestJob
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-
+    # EXECUTE - UNIT TEST
+    - script: |
+        pip install pytest pytest-azurepipelines pytest-cov
+        python3 -m pytest --doctest-modules --junitxml=junit/test_results.xml --cov=. --cov-report=xml -v test-app/test_main.py
+        echo "Buscando archivos XML de resultados:"
+        find . -name "*.xml"
+      displayName: 'Unit Test with pytest and debug output'
+      continueOnError: true
+    # CHECK - Working directory
+    - script: |
+        pwd
+        ls -R
+      displayName: 'Check working directory Unit Test'
     # PUBLISH - Unit Test Results
     - task: PublishTestResults@2
       condition: succeededOrFailed()
@@ -102,7 +104,6 @@ stages:
         searchFolder: '$(System.DefaultWorkingDirectory)'
         testRunTitle: 'Publish test results for Python $(pythonVersion)'
       displayName: 'Publish Unit Test Results'
-    
     # PUBLISH - Code Coverage Results
     - task: PublishCodeCoverageResults@2
       condition: succeededOrFailed()
@@ -110,7 +111,6 @@ stages:
         summaryFileLocation: 'coverage.xml'
         failIfCoverageEmpty: false
       displayName: 'Publish Code Coverage Results'
-    
     - script: |
         if [ -f coverage.xml ]; then
           python3 -c "
@@ -126,12 +126,4 @@ stages:
           echo "El archivo coverage.xml no se encontró"
         fi
       displayName: 'Print Coverage Summary'
-      condition: succeededOrFailed()
-
-    # PUBLISH - Flake8 results
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathToPublish: 'flake8_report.txt'
-        artifactName: 'code_quality_reports'
-      displayName: 'Publish Flake8 results'
       condition: succeededOrFailed()
