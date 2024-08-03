@@ -73,7 +73,7 @@ stages:
         artifactName: 'code_quality_reports'
       displayName: 'Publish Flake8 results'
 
-# Stage 5 - EXECUTE & PUBLISH UNIT TEST
+# Stage 5 - EXECUTE & PUBLISH UNIT TEST & CODE COVERAGE
 - stage: UnitTest
   condition: true
   jobs:
@@ -81,7 +81,7 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-    # EXECUTE - UNIT TEST
+    # EXECUTE - UNIT TEST & CODE COVERAGE
     - script: |
         pip install pytest pytest-azurepipelines pytest-cov
         python3 -m pytest --doctest-modules --junitxml=junit/test_results.xml --cov=. --cov-report=xml -v test-app/test_main.py
@@ -111,3 +111,43 @@ stages:
         summaryFileLocation: 'coverage.xml'
         failIfCoverageEmpty: false
       displayName: 'Publish Code Coverage Results'
+
+# Stage 6 - SECURITY ANALYSIS
+- stage: SecurityAnalysis
+  condition: true
+  jobs:
+  - job: BanditScanJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(pythonVersion)'
+        addToPath: true
+      displayName: 'Use Python $(pythonVersion)'
+    # INSTALL - Bandit
+    - script: |
+        python -m pip install --upgrade pip
+        pip install bandit
+      displayName: 'Install Bandit'
+    # EXECUTE - Security Analysis with Bandit
+    - script: |
+        bandit -r . -f custom --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}" -o bandit_results.txt
+      displayName: 'Run Bandit'
+      continueOnError: true
+    # EXECUTE - UNIT TEST & CODE COVERAGE
+    - script: |
+        if [ -f bandit_results.txt ]; then
+          echo "Bandit found the following issues:"
+          cat bandit_results.txt
+        else
+          echo "No issues found by Bandit."
+        fi
+      displayName: 'Display Bandit Results'
+    # PUBLISH - UNIT TEST & CODE COVERAGE
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'bandit_results.txt'
+        artifactName: 'security_scan_results'
+      displayName: 'Publish Bandit Results'
+      condition: succeededOrFailed()
