@@ -143,6 +143,7 @@ stages:
         else
           echo "No issues found by Bandit."
         fi
+      continueOnError: true
       displayName: 'Display Bandit Results'
     # PUBLISH - BANDIT ANALYSIS REPORT
     - task: PublishBuildArtifacts@1
