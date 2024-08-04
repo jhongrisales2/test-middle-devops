@@ -135,7 +135,7 @@ stages:
         bandit -r . -f custom --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}" -o bandit_results.txt
       displayName: 'Run Bandit'
       continueOnError: true
-    # EXECUTE - UNIT TEST & CODE COVERAGE
+    # SHOW - Security Analysis scan results
     - script: |
         if [ -f bandit_results.txt ]; then
           echo "Bandit found the following issues:"
@@ -144,7 +144,7 @@ stages:
           echo "No issues found by Bandit."
         fi
       displayName: 'Display Bandit Results'
-    # PUBLISH - UNIT TEST & CODE COVERAGE
+    # PUBLISH - BANDIT ANALYSIS REPORT
     - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: 'bandit_results.txt'
