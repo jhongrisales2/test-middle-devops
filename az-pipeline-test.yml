@@ -174,7 +174,7 @@ stages:
     - task: Docker@2
       displayName: Build and Push
       inputs:
-        Dockerfile: '$(System.DefaultWorkingDirectory)'
+        Dockerfile: '$(System.DefaultWorkingDirectory)/Dockerfile'
         command: buildAndPush
         repository: flaskAppRepo
         tags: |
