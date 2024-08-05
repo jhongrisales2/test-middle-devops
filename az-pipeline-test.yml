@@ -152,3 +152,20 @@ stages:
         artifactName: 'security_scan_results'
       displayName: 'Publish Bandit Results'
       condition: succeededOrFailed()
+
+# Stage 7 - IMAGE DOCKER TO AZURE CONTAINER REGISTRY
+- stage: BuildDockerImage
+  displayName: Build and push Docker Image
+  condition: true
+  jobs:
+  - job: BuildDockerImage
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        dockerfile: '**/Dockerfile'
+        containerRegistry: 'acrinterviewdevops'
+        tags: '$(tag)'
