@@ -10,4 +10,6 @@ COPY . /app-flask
 
 RUN pip3 --no-cache-dir install -r requirements.txt --break-system-packages
 
+EXPOSE 5500
+
 CMD ["python3","first_app/app_random_names.py"]
