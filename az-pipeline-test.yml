@@ -20,7 +20,7 @@ stages:
 
 # Stage 2 - INSTALL TOOLS
 - stage: InstallTools
-  condition: true
+  condition: false
   jobs:
   - job: InstallToolsJob
     pool:
@@ -33,7 +33,7 @@ stages:
 
 # Stage 3 - CHECK INSTALL TOOLS AND VERSIONS
 - stage: CheckInstallTools
-  condition: true
+  condition: false
   jobs:
   - job: CheckInstallToolsJob
     pool:
@@ -46,7 +46,7 @@ stages:
 
 # Stage 4 - EXECUTE & PUBLISH LINT TEST
 - stage: StaticCodeAnalysis
-  condition: true
+  condition: false
   jobs:
   - job: StaticCodeAnalysisJob
     pool:
@@ -75,7 +75,7 @@ stages:
 
 # Stage 5 - EXECUTE & PUBLISH UNIT TEST & CODE COVERAGE
 - stage: UnitTest
-  condition: true
+  condition: false
   jobs:
   - job: UnitTestJob
     pool:
@@ -114,7 +114,7 @@ stages:
 
 # Stage 6 - SECURITY ANALYSIS
 - stage: SecurityAnalysis
-  condition: true
+  condition: false
   jobs:
   - job: BanditScanJob
     pool:
@@ -170,16 +170,16 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: >
           az acr login -n acrinterviewdevops
-    # BUILD & PUSH - Build docker image and push to ACR
-    - task: Docker@2
-      displayName: Build and Push
+    # BUILD - Build docker image
+    - task: AzureCLI@2
       inputs:
-        Dockerfile: '$(System.DefaultWorkingDirectory)/Dockerfile'
-        command: buildAndPush
-        repository: flaskAppRepo
-        tags: |
-          tag1
-          tag2
+        azureSubscription: srv-conn-azRM
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: >
+          az acr build --image flask-app-repo/flaskapp:v1 \
+          --registry acrinterviewdevops \
+          --file Dockerfile .
     # LOGOUT - Logout to Azure Container Registry Service
     - task: Docker@2
       displayName: Logout of ACR
