@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  Template CloudFormation de prueba tecnica para vacante de DevOps - Liberty
+
+Rules:
+  OnlyUsEast1:
+    Assertions:
+      - Assert:
+          Fn::Equals:
+            - !Ref AWS::Region
+            - us-east-1
+        AssertDescription: |
+          This template can only be deployed in the us-east-1 region
+
+Parameters:
+  BucketNameParameter:
+    Description: Name for the bucket that has the CloudFront site
+    Type: String
+    Default: s3-bucket-cloudfront-liberty
+
+Resources:
+  # S3 Bucket for CloudFront site
+  S3BucketFontsSite:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketNameParameter
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Suspended
+      Tags:
+        - Key: lm_troux_uid
+          Value: 123
+  
+  # Create OAC for CloudFront access to S3
+  OacCloudFrontS3:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Description: An optional description for the origin access control
+        Name: CloudFrontOAC-Liberty
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+  
+  # DynamoDB Table productos with KeyShema
+  DynamoDBTableTest: 
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "productos"
+      AttributeDefinitions: 
+        - AttributeName: "Id"
+          AttributeType: "N"
+        - AttributeName: "Nombre"
+          AttributeType: "S"
+        - AttributeName: "Cantidad"
+          AttributeType: "N"
+      KeySchema: 
+        - AttributeName: "Id"
+          KeyType: "HASH"
+        - AttributeName: "Nombre"
+          KeyType: "RANGE"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      GlobalSecondaryIndexes:
+        - IndexName: CantidadIndex
+          KeySchema:
+            - AttributeName: Cantidad
+              KeyType: HASH
+            - AttributeName: Nombre
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 5
+            WriteCapacityUnits: 5
+      Tags:
+        - Key: lm_troux_uid
+          Value: 123
+
+  # IAM Role for Lambdas
+  IamRoleDemo:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3CopyPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                Resource:
+                  - !Sub
+                    - arn:aws:s3:::${TargetBucket}/*
+                    - TargetBucket: !Ref S3BucketFontsSite
+                  - !Sub
+                    - arn:aws:s3:::${TargetBucket}
+                    - TargetBucket: !Ref S3BucketFontsSite
+      Tags:
+        - Key: lm_troux_uid
+          Value: 123
+
+# Create CloudFront Distribution for Site from S3
+  CloudFrontDistributionS3Site:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt S3BucketFontsSite.DomainName
+            OriginAccessControlId: !Ref OacCloudFrontS3
+            S3OriginConfig: {}
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+      Tags:
+        - Key: lm_troux_uid
+          Value: 123
+
+# S3 Bucket Policy to allow access to the CloudFront
+  S3BucketPolicyOAC:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref S3BucketFontsSite
+      PolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+          - Action: s3:GetObject
+            Principal:
+              Service: 'cloudfront.amazonaws.com'
+            Effect: Allow
+            Resource: !Sub '${S3BucketFontsSite.Arn}/*'
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionS3Site}'
+
+Outputs:
+  S3BucketFontsSiteArn:
+    Description: ARN Bucket CloudFront site
+    Value: !GetAtt S3BucketFontsSite.Arn
+  S3DomainNameBucket:
+    Description: Domain Name of Bucket
+    Value: !GetAtt S3BucketFontsSite.DomainName

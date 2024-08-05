@@ -25,6 +25,5 @@ def index():
 
     return( render_template("index_names.html", DATE_FLASK_VAR=DateFlask_VAR, AMOUNT_NAMES_VAR=AmountNames_VAR, VEC_NAMES_VAR=VecNames_VAR) )
 
-
-
-
+if(__name__) == '__main__':
+    app.run(host="0.0.0.0",port=5500,debug=True)
