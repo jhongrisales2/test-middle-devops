@@ -1,0 +1,154 @@
+trigger: none
+
+stages:
+
+# Stage 1 - BUILD
+- stage: Build
+  condition: true
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    continueOnError: true
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(pythonVersion)'
+      displayName: 'Use Python $(pythonVersion)'
+    - script: python3 base-app/helloworld.py
+    displayName: 'Run Hello World'
+
+# Stage 2 - INSTALL TOOLS
+- stage: InstallTools
+  condition: true
+  jobs:
+  - job: InstallToolsJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        python3 -m ensurepip --upgrade
+        python3 -m pip install --upgrade pip setuptools wheel
+      displayName: 'Installation of the tools'
+
+# Stage 3 - CHECK INSTALL TOOLS AND VERSIONS
+- stage: CheckInstallTools
+  condition: true
+  jobs:
+  - job: CheckInstallToolsJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        python3 --version
+        pip --version
+      displayName: 'Check Python and pip versions'
+
+# Stage 4 - EXECUTE & PUBLISH LINT TEST
+- stage: StaticCodeAnalysis
+  condition: true
+  jobs:
+  - job: StaticCodeAnalysisJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    # EXECUTE - LINT TEST
+    - script: |
+        python3 -m pip install flake8
+        flake8 . --output-file=flake8_report.txt --statistics
+        echo "Flake8 found the following issues:"
+        cat flake8_report.txt
+      displayName: 'Run lint test'
+      continueOnError: true
+    # CHECK - Working directory
+    - script: |
+        pwd
+        ls -R
+      displayName: 'Check working directory Lint Test'
+    # PUBLISH - Flake8 results
+    - task: PublishBuildArtifacts@1
+      condition: succeededOrFailed()
+      inputs:
+        pathToPublish: 'flake8_report.txt'
+        artifactName: 'code_quality_reports'
+      displayName: 'Publish Flake8 results'
+
+# Stage 5 - EXECUTE & PUBLISH UNIT TEST & CODE COVERAGE
+- stage: UnitTest
+  condition: true
+  jobs:
+  - job: UnitTestJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    # EXECUTE - UNIT TEST & CODE COVERAGE
+    - script: |
+        pip install pytest pytest-azurepipelines pytest-cov
+        python3 -m pytest --doctest-modules --junitxml=junit/test_results.xml --cov=. --cov-report=xml -v test-app/test_main.py
+        echo "Buscando archivos XML de resultados:"
+        find . -name "*.xml"
+      displayName: 'Unit Test with pytest and debug output'
+      continueOnError: true
+    # CHECK - Working directory
+    - script: |
+        pwd
+        ls -R
+      displayName: 'Check working directory Unit Test'
+    # PUBLISH - Unit Test Results
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        #failTaskOnFailedTests: true
+        testResultsFormat: 'JUnit'
+        testResultsFiles: './junit/test_results.xml'
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        testRunTitle: 'Publish test results for Python $(pythonVersion)'
+      displayName: 'Publish Unit Test Results'
+    # PUBLISH - Code Coverage Results
+    - task: PublishCodeCoverageResults@2
+      condition: succeededOrFailed()
+      inputs:
+        summaryFileLocation: 'coverage.xml'
+        failIfCoverageEmpty: false
+      displayName: 'Publish Code Coverage Results'
+
+# Stage 6 - SECURITY ANALYSIS
+- stage: SecurityAnalysis
+  condition: true
+  jobs:
+  - job: BanditScanJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '$(pythonVersion)'
+        addToPath: true
+      displayName: 'Use Python $(pythonVersion)'
+    # INSTALL - Bandit
+    - script: |
+        python -m pip install --upgrade pip
+        pip install bandit
+      displayName: 'Install Bandit'
+    # EXECUTE - Security Analysis with Bandit
+    - script: |
+        bandit -r . -f custom --msg-template "{abspath}:{line}: {severity}: {test_id}: {msg}" -o bandit_results.txt
+      displayName: 'Run Bandit'
+      continueOnError: true
+    # SHOW - Security Analysis scan results
+    - script: |
+        if [ -f bandit_results.txt ]; then
+          echo "Bandit found the following issues:"
+          cat bandit_results.txt
+        else
+          echo "No issues found by Bandit."
+        fi
+      continueOnError: true
+      displayName: 'Display Bandit Results'
+    # PUBLISH - BANDIT ANALYSIS REPORT
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'bandit_results.txt'
+        artifactName: 'security_scan_results'
+      displayName: 'Publish Bandit Results'
+      condition: succeededOrFailed()
