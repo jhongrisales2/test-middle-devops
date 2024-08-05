@@ -171,15 +171,14 @@ stages:
         inlineScript: >
           az acr login -n acrinterviewdevops
     # BUILD - Build docker image
-    - task: AzureCLI@2
+    - task: Docker@2
       inputs:
-        azureSubscription: srv-conn-azRM
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: >
-          az acr build --image flask-app-repo/flaskapp:v1 \
-          --registry acrinterviewdevops \
-          --file Dockerfile .
+        containerRegistry: 'srv-conn-azure-acr'
+        repository: 'flaskapp'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
+        buildContext: '$(Build.SourcesDirectory)'
+        tags: $(Build.BuildId)
     # LOGOUT - Logout to Azure Container Registry Service
     - task: Docker@2
       displayName: Logout of ACR
