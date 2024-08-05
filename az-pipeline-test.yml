@@ -4,7 +4,7 @@ stages:
 
 # Stage 1 - BUILD
 - stage: Build
-  condition: false
+  condition: true
   jobs:
   - job: BuildJob
     pool:
@@ -20,7 +20,7 @@ stages:
 
 # Stage 2 - INSTALL TOOLS
 - stage: InstallTools
-  condition: false
+  condition: true
   jobs:
   - job: InstallToolsJob
     pool:
@@ -33,7 +33,7 @@ stages:
 
 # Stage 3 - CHECK INSTALL TOOLS AND VERSIONS
 - stage: CheckInstallTools
-  condition: false
+  condition: true
   jobs:
   - job: CheckInstallToolsJob
     pool:
@@ -46,7 +46,7 @@ stages:
 
 # Stage 4 - EXECUTE & PUBLISH LINT TEST
 - stage: StaticCodeAnalysis
-  condition: false
+  condition: true
   jobs:
   - job: StaticCodeAnalysisJob
     pool:
@@ -75,7 +75,7 @@ stages:
 
 # Stage 5 - EXECUTE & PUBLISH UNIT TEST & CODE COVERAGE
 - stage: UnitTest
-  condition: false
+  condition: true
   jobs:
   - job: UnitTestJob
     pool:
@@ -114,7 +114,7 @@ stages:
 
 # Stage 6 - SECURITY ANALYSIS
 - stage: SecurityAnalysis
-  condition: false
+  condition: true
   jobs:
   - job: BanditScanJob
     pool:
@@ -152,36 +152,3 @@ stages:
         artifactName: 'security_scan_results'
       displayName: 'Publish Bandit Results'
       condition: succeededOrFailed()
-
-# Stage 7 - IMAGE DOCKER TO AZURE CONTAINER REGISTRY
-- stage: BuildDockerImage
-  displayName: Build and push Docker Image
-  condition: true
-  jobs:
-  - job: BuildDockerImage
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-    # LOGIN - Login to Azure Container Registry Service
-    - task: AzureCLI@2
-      inputs:
-        azureSubscription: srv-conn-azRM
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
-        inlineScript: >
-          az acr login -n acrinterviewdevops
-    # BUILD - Build docker image
-    - task: Docker@2
-      inputs:
-        containerRegistry: 'srv-conn-azure-acr'
-        repository: 'flaskapp'
-        command: 'buildAndPush'
-        Dockerfile: '**/Dockerfile'
-        buildContext: '$(Build.SourcesDirectory)'
-        tags: $(Build.BuildId)
-    # LOGOUT - Logout to Azure Container Registry Service
-    - task: Docker@2
-      displayName: Logout of ACR
-      inputs:
-        command: logout
-        containerRegistry: acrinterviewdevops
