@@ -152,3 +152,22 @@ stages:
         artifactName: 'security_scan_results'
       displayName: 'Publish Bandit Results'
       condition: succeededOrFailed()
+
+# Stage 7 - BUILD DOCKER IMAGE & PUSH TO ACR
+- stage: BuildPushDockerImage
+  condition: true
+  jobs:
+  - job: BuildPushDockerImgJob
+    steps:
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: srv-conn-azRM
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          # Login to ACR
+          az acr login --name acrinterviewdevops.azurecr.io
+          # Build Docker Image
+          docker build -t acrinterviewdevops.azurecr.io/flaskapp:$(Build.BuildId) .
+          # Push image to ACR
+          docker push acrinterviewdevops.azurecr.io/flaskapp:$(Build.BuildId)
